@@ -3,6 +3,7 @@
 uint8_t currScreen = 2;
 QueueHandle_t qButton;
 QueueHandle_t qSensor;
+QueueHandle_t qNetwork;
 
 static const char *TAG ="[UI]";
 
@@ -10,6 +11,7 @@ void ui_task(void *pvParameters)
 {
   qButton = xQueueCreate(1,sizeof(uint8_t));
   qSensor = xQueueCreate(1,sizeof(SensorData));
+  qNetwork = xQueueCreate(1,sizeof(NetworkData));
 
   if(qButton == NULL)
     ESP_LOGE(TAG,"Error creating the button queue");
@@ -39,6 +41,30 @@ void draw_screen()
       // Print Sesnor Data
       sprintf(buf,"%.2f deg C %.2f%% RH",data.enviro.temp,data.enviro.humid);
       TFT_print(buf,0,15);
+    }
+
+  NetworkData ndata;
+  if(pdTRUE == xQueueReceive(qNetwork,&ndata,0))
+    {
+      tft_font_transparent = 0;
+      TFT_setclipwin(5,HEADER_HEIGHT+1,TFT_WIDTH,TFT_HEIGHT);
+      tft_bg = TFT_DARKGREY;
+      tft_fg = TFT_WHITE;
+      TFT_fillWindow(tft_bg);
+
+      char buf[100];
+
+      // Print Sesnor Data
+      if(ndata.connected)
+      {
+        sprintf(buf,"WIFI %s",ndata.ip_addr);
+      }
+      else
+      {
+        sprintf(buf,"No WIFI");
+      }
+      
+      TFT_print(buf,0,30);
     }
 }
 

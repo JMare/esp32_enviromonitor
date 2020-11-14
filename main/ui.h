@@ -18,8 +18,8 @@
 #define HEADER_HEIGHT 25
 
 extern QueueHandle_t qButton;
-
 extern QueueHandle_t qSensor;
+extern QueueHandle_t qNetwork;
 
 typedef struct{
   unsigned int soc;
@@ -42,6 +42,11 @@ typedef struct{
   BattStatus batt;
   EnviroData enviro;
 } SensorData;
+
+typedef struct{
+  bool connected;
+  char ip_addr[50];
+} NetworkData;
 
 #define BUTTON_QUEUE_SIZE 10
 
