@@ -1,7 +1,6 @@
 #include "ui.h"
 
 uint8_t currScreen = 2;
-void (*draw_functions[NUM_SCREENS]) () = {draw_screenData,draw_screenSettings,draw_screenDebug1,draw_screenDebug2};
 QueueHandle_t qButton;
 QueueHandle_t qSensor;
 
@@ -18,56 +17,15 @@ void ui_task(void *pvParameters)
   draw_header_background();
   draw_header();
   draw_body_background();
-  draw_functions[currScreen]();
   while(1)
   {
     vTaskDelay(200/portTICK_PERIOD_MS);
-    uint8_t byte;
-    if(pdTRUE == xQueueReceive(qButton,&byte,0))
-    {
-
-      if(byte == 'a')
-        currScreen = switch_screen(currScreen,-1);
-      else if(byte == 'd')
-        currScreen = switch_screen(currScreen,1);
-    }
-    draw_functions[currScreen]();
+    draw_screen();
   }
 }
 
-uint8_t switch_screen(uint8_t current_screen, int8_t dir)
+void draw_screen()
 {
-  current_screen += dir;
-  if(current_screen == 4)
-    return 0;
-
-  if(current_screen > 4)
-    return 3;
-
-  return current_screen;
-}
-
-void draw_screenData()
-{
-  TFT_setclipwin(0,HEADER_HEIGHT+1,TFT_WIDTH,TFT_HEIGHT);
-  tft_bg = TFT_DARKGREY;
-  TFT_fillWindow(tft_bg);
-  tft_fg = TFT_WHITE;
-  TFT_print("Main Data Display",5,50);
-}
-
-void draw_screenSettings()
-{
-  TFT_setclipwin(0,HEADER_HEIGHT+1,TFT_WIDTH,TFT_HEIGHT);
-  tft_bg = TFT_DARKGREY;
-  TFT_fillWindow(tft_bg);
-  tft_fg = TFT_WHITE;
-  TFT_print("Settings Display",5,50);
-}
-
-void draw_screenDebug1()
-{
-
   SensorData data;
   if(pdTRUE == xQueueReceive(qSensor,&data,0))
     {
@@ -75,44 +33,14 @@ void draw_screenDebug1()
       TFT_setclipwin(5,HEADER_HEIGHT+1,TFT_WIDTH,TFT_HEIGHT);
       tft_bg = TFT_DARKGREY;
       tft_fg = TFT_WHITE;
-      static int lastlen = 0;
 
-      //TFT_fillWindow(tft_bg);
-
-      // Print battery stuff
       char buf[50];
-      int len = sprintf(buf,"%dmA %dV %d%% ",data.batt.current,data.batt.voltage,data.batt.soc);
-      if(len != lastlen)
-        TFT_fillWindow(tft_bg);
-
-      lastlen = len;
-
-      TFT_print("BQ27441",0,10);
-      TFT_print(buf,0,30);
-      if(data.batt.current > 0)
-        TFT_print("CHG",LASTX,30);
-      else if(data.batt.current < 0)
-        TFT_print("DSG",LASTX,30);
-
-      float temp = (data.batt.temp/10)-273.15;
-      sprintf(buf,"%imAh/%imAh %.0f°C",data.batt.capacity,data.batt.full_capacity, temp);
-      TFT_print(buf,0,50);
 
       // Print Sesnor Data
-      sprintf(buf,"BME280\n%.2f deg C %.2f hPa \n%.2f%% Humidity",data.enviro.temp,data.enviro.press,data.enviro.humid);
-      TFT_print(buf,0,100);
+      sprintf(buf,"%.2f deg C %.2f%% RH",data.enviro.temp,data.enviro.humid);
+      TFT_print(buf,0,15);
     }
 }
-
-void draw_screenDebug2()
-{
-  TFT_setclipwin(0,HEADER_HEIGHT+1,TFT_WIDTH,TFT_HEIGHT);
-  tft_bg = TFT_DARKGREY;
-  TFT_fillWindow(tft_bg);
-  tft_fg = TFT_WHITE;
-  TFT_print("Debug Display2",5,50);
-}
-
 
 void draw_header_background()
 {
@@ -132,11 +60,7 @@ void draw_header()
 {
   TFT_setclipwin(0,0,TFT_WIDTH,HEADER_HEIGHT);
   tft_fg = TFT_BLACK;
-  TFT_print("SkI2c v0.01",CENTER,CENTER);
-}
-
-void draw_body()
-{
+  TFT_print("esp32_enviromonitor v0.01",CENTER,CENTER);
 }
 
 void init_tft()

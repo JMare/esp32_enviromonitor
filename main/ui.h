@@ -17,8 +17,6 @@
 // UI AREA DEFINES
 #define HEADER_HEIGHT 25
 
-#define NUM_SCREENS 4
-
 extern QueueHandle_t qButton;
 
 extern QueueHandle_t qSensor;
@@ -48,15 +46,10 @@ typedef struct{
 #define BUTTON_QUEUE_SIZE 10
 
 // functions to draw screens
-void draw_screenData();
-void draw_screenSettings();
-void draw_screenDebug1();
-void draw_screenDebug2();
-
+void draw_screen();
 
 uint8_t switch_screen(uint8_t current_screen, int8_t dir);
 void draw_header();
-void draw_body();
 void draw_header_background();
 void draw_body_background();
 void init_tft();
